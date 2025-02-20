@@ -27,8 +27,8 @@
       ></div>
     </div>
 
-    <audio id="correct-sound" src="../Map/sound/correct.mp3"></audio>
-    <audio id="wrong-sound" src="../Map/sound//wrong.wav"></audio>
+    <audio id="correct-sound" src="./sound/correct.mp3"></audio>
+    <audio id="wrong-sound" src="./sound/wrong.wav"></audio>
 
     <script>
       let result = 0; // عدد الإجابات الصحيحة
@@ -60,7 +60,7 @@
         if (questionCount >= maxQuestions) {
           setTimeout(() => {
             location.reload(); // إعادة تحميل الصفحة بعد عرض النتيجة
-          }, 6000);
+          }, 2000);
           return;
         }
 
