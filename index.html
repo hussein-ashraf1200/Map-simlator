@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="output.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- container -->
+    <div class="flex flex-col justify-center items-center mt-2">
+      <h1
+        class="text-center font-sans font-bold text-white border-1 border-solid bg-[#ecc32f] rounded-2xl p-2"
+      >
+        أختبر نفسك في خريطة الوطن العربي
+      </h1>
+
+      <p class="text-purple-900 font-bold">أجب عن الاسئلة التالية</p>
+      <p id="qestions">أين تقع الدولة التالية؟</p>
+      <p
+        id="final-result"
+        class="border-2 p-2 rounded-lg hidden bg-[#ecc32f]"
+      ></p>
+
+      <div
+        id="svg-container"
+        class="w-full max-w-screen-lg h-auto flex justify-center items-center mx-auto"
+      ></div>
+    </div>
+
+    <audio id="correct-sound" src="../Map/sound/correct.mp3"></audio>
+    <audio id="wrong-sound" src="../Map/sound//wrong.wav"></audio>
+
+    <script>
+      let result = 0; // عدد الإجابات الصحيحة
+      let questionCount = 0; // عدد الأسئلة المطروحة
+      const maxQuestions = 10; // الحد الأقصى للأسئلة
+      let countryName = "";
+      let availableCountries = [];
+      const correctAnswer = document.getElementById("correct-sound");
+      const wrongAnswer = document.getElementById("wrong-sound");
+
+      function playCorrectAnswer() {
+        correctAnswer.playbackRate = 9;
+        correctAnswer.play();
+      }
+
+      function playWrongAnswer() {
+        wrongAnswer.playbackRate = 3;
+        wrongAnswer.play();
+      }
+
+      function updateQuestion() {
+        if (questionCount >= maxQuestions) {
+          const resultElement = document.getElementById("final-result");
+          resultElement.textContent = `نتيجتك النهائية ${result} من ${maxQuestions}`;
+          resultElement.classList.remove("hidden"); // إزالة الإخفاء
+        }
+
+        // توقف بعد 10 أسئلة وعرض النتيجة
+        if (questionCount >= maxQuestions) {
+          setTimeout(() => {
+            location.reload(); // إعادة تحميل الصفحة بعد عرض النتيجة
+          }, 6000);
+          return;
+        }
+
+        // التأكد من بقاء دول متاحة
+        if (availableCountries.length > 0) {
+          const randomIndex = Math.floor(
+            Math.random() * availableCountries.length
+          );
+          countryName = availableCountries[randomIndex];
+
+          // إزالة الدولة المختارة حتى لا تتكرر
+          availableCountries.splice(randomIndex, 1);
+
+          // تحديث السؤال
+          document.getElementById(
+            "qestions"
+          ).textContent = `أين تقع الدولة التالية: ${countryName}`;
+        }
+      }
+
+      fetch("testall.svg")
+        .then((response) => response.text())
+        .then((data) => {
+          const svgContainer = document.getElementById("svg-container");
+          svgContainer.innerHTML = data;
+
+          const paths = svgContainer.querySelectorAll("path[data-name]");
+
+          if (paths.length > 0) {
+            // جمع أسماء الدول في المصفوفة المتاحة
+            availableCountries = Array.from(paths).map((path) =>
+              path.getAttribute("data-name")
+            );
+
+            updateQuestion(); // تعيين السؤال الأول
+
+            paths.forEach((path) => {
+              path.setAttribute("fill", "#BDC6C8");
+              path.setAttribute("stroke", "black");
+              path.setAttribute("stroke-width", ".1");
+
+              path.addEventListener("mouseover", () =>
+                path.setAttribute("fill", "#D1DBDD")
+              );
+              path.addEventListener("mouseout", () =>
+                path.setAttribute("fill", "#BDC6C8")
+              );
+
+              path.addEventListener("click", () => {
+                if (questionCount >= maxQuestions) return; // لا تضيف سؤال جديد بعد الحد الأقصى
+
+                const clickedName = path.getAttribute("data-name");
+
+                if (clickedName === countryName) {
+                  playCorrectAnswer();
+                  result += 1;
+                  path.setAttribute("fill", "green");
+                } else {
+                  playWrongAnswer();
+                  path.setAttribute("fill", "red");
+                }
+
+                questionCount++; // زيادة عدد الأسئلة هنا فقط عند النقر
+                updateQuestion();
+              });
+            });
+          } else {
+            console.error("❌ لم يتم العثور على أي دول في ملف SVG.");
+          }
+        })
+        .catch((error) => console.error("❌ خطأ أثناء تحميل الخريطة:", error));
+    </script>
+  </body>
+</html>
